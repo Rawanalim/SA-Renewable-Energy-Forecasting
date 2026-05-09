@@ -184,11 +184,7 @@ def plot_forecast(df_raw, forecast_until=2030):
     # Prepare cumulative capacity target
     y = yearly['Cumulative_MW'].values
 
-    # Create Linear Regression model
-    model = LinearRegression()
-
-    # Train forecasting model
-    model.fit(X, y)
+    model =train_renewable_model(X, y)
 
     # Create future years until 2030
     future_years = np.arange(
