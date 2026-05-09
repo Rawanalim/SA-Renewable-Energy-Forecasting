@@ -164,9 +164,16 @@ def plot_regional_distribution(df_raw):
 def plot_forecast(df_raw, forecast_until=2030):
 
     # Keep only installed renewable projects
-    installed = df_raw[
-        df_raw['Installed / Planned'] == 'Installed'
-    ]
+  # Group renewable capacity by city and project status
+    regional = df_raw.groupby(
+    ['City', 'Installed / Planned']
+    )['Capacity'].sum().unstack(fill_value=0)
+
+    # Remove multi-city projects
+    regional = regional.drop(
+    index='Multi-city',
+    errors='ignore'
+    )
 
     # Calculate yearly renewable capacity
     yearly = installed.groupby(
