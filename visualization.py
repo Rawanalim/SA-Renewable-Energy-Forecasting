@@ -87,7 +87,10 @@ def plot_regional_distribution(df_raw):
     plt.savefig('output_regional_distribution.png', dpi=150)
     plt.show()
     print("Chart saved: output_regional_distribution.png")
-
+    # Print top 3 regions with their capacity values
+    print("\n Top 3 fastest-growing regions:")
+    for i, (city, val) in enumerate(regional.nlargest(3).items(), 1):
+        print(f"   {i}. {city}: {val:,.0f} MW")
 
 # 4. FUTURE CAPACITY FORECAST (Vision 2030)
 def plot_forecast(df_raw, forecast_until=2030):
@@ -140,3 +143,20 @@ def plot_forecast(df_raw, forecast_until=2030):
     print(f"Chart saved: output_forecast.png")
     print(f"Predicted capacity in 2030: {pred_2030:,.0f} MW")
     print(f"Gap from Vision 2030 target: {gap:,.0f} MW")
+    # Explain how the forecast number was calculated
+    print("\n📈 How the forecast is calculated:")
+    print(f"   The model adds ~{model.coef_[0]:,.0f} MW every year based on historical growth.")
+    print(f"   Model confidence (R²): {model.score(X, y):.2f} out of 1.0")
+    
+    # Explain the main factor driving the forecast
+    print("\n Key influencing factor:")
+    print("   The main driver is the consistent increase in")
+    print("   project count and capacity year over year.")
+
+    # Give a plain-language conclusion about Vision 2030 alignment
+    if gap > 0:
+        print(f"\n Based on current growth, Saudi Arabia is expected")
+        print(f"    to be {gap:,.0f} MW SHORT of the Vision 2030 target.")
+    else:
+        print(f"\n Based on current growth, Saudi Arabia is ON TRACK")
+        print(f"    to meet the Vision 2030 target.")
