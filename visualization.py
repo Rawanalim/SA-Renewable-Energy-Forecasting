@@ -153,7 +153,7 @@ def plot_forecast(df_raw, forecast_until=2030):
     best_year = yearly.loc[yearly['Capacity'].idxmax(), 'Year']
     best_val = yearly.loc[yearly['Capacity'].idxmax(), 'Capacity']
 
-    print("\n🔍 Key influencing factor:")
+    print("\n  Key influencing factor:")
     print(f"   Highest growth was recorded in {best_year} with {best_val:,.0f} MW added.")
     print(f"   The model uses this consistent upward trend to project future capacity.")
 
