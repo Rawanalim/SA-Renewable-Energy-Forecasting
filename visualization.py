@@ -26,6 +26,13 @@ def plot_yearly_growth(df_raw):
     ax.set_ylabel('Annual Capacity Added (MW)')
     ax2.set_ylabel('Cumulative Capacity (MW)')
     ax.set_title('Saudi Arabia – Yearly Renewable Energy Growth (Installed Projects)')
+    # Fix years display (remove decimals)
+    ax.xaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+
+    ax.xaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, _: f'{int(x)}')
+    )
+
     lines1, labels1 = ax.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
@@ -36,33 +43,57 @@ def plot_yearly_growth(df_raw):
 
 
 # 2. SOLAR VS WIND COMPARISON
+    
 def plot_solar_vs_wind(df_raw):
     """
     Expects columns: 'Type (solar/ wind)', 'Capacity', 'Year', 'Installed / Planned'
     """
-    installed = df_raw[df_raw['Installed / Planned'] == 'Installed']
-    comparison = installed.groupby(['Year', 'Type (solar/ wind)'])['Capacity'].sum().unstack(fill_value=0)
+    comparison = df_raw.groupby(
+        ['Installed / Planned', 'Type (solar/ wind)']
+    )['Capacity'].sum().unstack(fill_value=0)
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-    # Stacked bar
-    comparison.plot(kind='bar', stacked=True, ax=axes[0],
-                    color=['#f39c12', '#3498db', '#2ecc71'])
-    axes[0].set_title('Solar vs Wind – Annual Capacity by Year')
-    axes[0].set_xlabel('Year')
-    axes[0].set_ylabel('Capacity (MW)')
-    axes[0].tick_params(axis='x', rotation=45)
+    comparison.plot(
+        kind='bar',
+        ax=axes[0],
+        color=['#f39c12', '#3498db', '#2ecc71']
+    )
 
-    # Pie chart (total share)
-    totals = installed.groupby('Type (solar/ wind)')['Capacity'].sum()
-    axes[1].pie(totals, labels=totals.index, autopct='%1.1f%%',
-                colors=['#f39c12', '#3498db', '#2ecc71'], startangle=140)
+    axes[0].set_title('Installed vs Planned Capacity by Energy Type')
+    axes[0].set_xlabel('Project Status')
+    axes[0].set_ylabel('Capacity (MW)')
+    axes[0].tick_params(axis='x', rotation=0)
+
+    totals = df_raw.groupby(
+        'Type (solar/ wind)'
+    )['Capacity'].sum()
+
+    axes[1].pie(
+        totals,
+        labels=totals.index,
+        autopct='%1.1f%%',
+        colors=['#f39c12', '#3498db', '#2ecc71'],
+        startangle=140
+    )
+
     axes[1].set_title('Total Energy Mix Share')
 
-    plt.suptitle('Solar vs Wind Energy Comparison', fontsize=14, fontweight='bold')
+    plt.suptitle(
+        'Solar vs Wind Energy Comparison',
+        fontsize=14,
+        fontweight='bold'
+    )
+
     plt.tight_layout()
-    plt.savefig('output_solar_vs_wind.png', dpi=150)
+
+    plt.savefig(
+        'output_solar_vs_wind.png',
+        dpi=150
+    )
+
     plt.show()
+
     print("Chart saved: output_solar_vs_wind.png")
 
 
@@ -71,25 +102,42 @@ def plot_regional_distribution(df_raw):
     """
     Expects columns: 'City', 'Capacity', 'Installed / Planned'
     """
-    regional = df_raw.groupby('City')['Capacity'].sum().sort_values(ascending=True)
+    regional = df_raw.groupby(
+        ['City', 'Installed / Planned']
+    )['Capacity'].sum().unstack(fill_value=0)
 
-    # Highlight top 3 fastest-growing regions
-    colors = ['#e74c3c' if city in regional.nlargest(3).index else '#3498db'
-              for city in regional.index]
+    regional = regional.sort_values(
+        by='Installed',
+        ascending=True
+    )
 
-    fig, ax = plt.subplots(figsize=(10, 7))
-    bars = ax.barh(regional.index, regional.values, color=colors)
+    fig, ax = plt.subplots(figsize=(11, 7))
+
+    regional.plot(
+        kind='barh',
+        stacked=True,
+        ax=ax,
+        color=['#2ecc71', '#f39c12']
+    )
+
     ax.set_xlabel('Total Capacity (MW)')
-    ax.set_title('Regional Distribution of Renewable Energy Capacity\n'
-                 '(Red = Top 3 fastest-growing regions)')
-    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{x:,.0f}'))
+    ax.set_title('Regional Renewable Energy Distribution\n(Installed vs Planned)')
+
+    ax.xaxis.set_major_formatter(
+        mticker.FuncFormatter(lambda x, _: f'{x:,.0f}')
+    )
+
     plt.tight_layout()
     plt.savefig('output_regional_distribution.png', dpi=150)
     plt.show()
+
     print("Chart saved: output_regional_distribution.png")
-    # Print top 3 regions with their capacity values
-    print("\n Top 3 fastest-growing regions:")
-    for i, (city, val) in enumerate(regional.nlargest(3).items(), 1):
+
+    total_capacity = regional.sum(axis=1).sort_values(ascending=False)
+
+    print("\n Top 3 regions by total capacity:")
+
+    for i, (city, val) in enumerate(total_capacity.head(3).items(), 1):
         print(f"   {i}. {city}: {val:,.0f} MW")
 
 # 4. FUTURE CAPACITY FORECAST (Vision 2030)
@@ -147,7 +195,7 @@ def plot_forecast(df_raw, forecast_until=2030):
     print("\n How the forecast is calculated:")
     print(f"   The model adds ~{model.coef_[0]:,.0f} MW every year based on historical growth.")
     print(f"   Model confidence (R²): {model.score(X, y):.2f} out of 1.0")
-    
+
     # Explain the main factor driving the forecast
     # Find the year with the highest capacity added (real data-driven insight)
     best_year = yearly.loc[yearly['Capacity'].idxmax(), 'Year']
