@@ -63,4 +63,9 @@ if run_pipeline or True:
                 # 6️⃣ Capture and display the exact matplotlib plot from visualization.py
                 # Since plot_forecast doesn't return text, we capture the active plt figure
                 fig, ax = plt.subplots()
-                plot_forecast(df_raw) # Calls
+                plot_forecast(df_raw) # Calls your team's actual plotting logic
+                st.pyplot(plt.gcf()) # Dynamically grabs the generated team chart cleanly
+                    
+        except Exception as e:
+            st.error(f"Pipeline Execution Error: {str(e)}")
+            st.info("Make sure all raw dataset files are correctly placed in the 'data/' folder in GitHub.")
