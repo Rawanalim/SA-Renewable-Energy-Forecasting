@@ -7,8 +7,7 @@ import os
 # 1️⃣ Import the exact functions from your team's files
 from data_loader import load_data
 from preprocessing import clean_data1, clean_data2, merge
-from model import train_forecaster, forecast_future
-from visualization import plot_forecast
+from visualization import plot_yearly_growth, plot_solar_vs_wind, plot_regional_distribution, plot_forecast
 from evaluation import evaluate_forecast
 
 # Application page configuration
@@ -27,18 +26,18 @@ run_pipeline = st.sidebar.button("🚀 Run Live AI Pipeline")
 if run_pipeline or True:
     with st.spinner("Executing core main.py pipeline models..."):
         try:
-            # 2️⃣ Execute core team pipeline steps sequentially
+            # 2️⃣ Load and clean the raw data using team's functions
             data1_raw, data2_raw = load_data()
             d1_cleaned = clean_data1(data1_raw)
             d2_cleaned = clean_data2(data2_raw)
-            df_raw = merge(d1_cleaned, d2_cleaned)
+            df_merged = merge(d1_cleaned, d2_cleaned)
             
             st.success("🎯 Backend Pipeline executed successfully from main.py files!")
             
-            # 3️⃣ Calculate real metrics dynamically to display on top metrics block
-            total_projects = len(df_raw)
-            total_current_capacity = df_raw['Capacity (MW)'].sum()
-            avg_capacity = df_raw['Capacity (MW)'].mean()
+            # 3> Calculate real KPI metrics dynamically using proper database columns
+            total_projects = len(df_merged)
+            total_current_capacity = df_merged['Capacity (MW)'].sum()
+            avg_capacity = df_merged['Capacity (MW)'].mean()
             
             # 4️⃣ Display real system KPI metrics calculated from your actual data
             col1, col2, col3 = st.columns(3)
@@ -51,21 +50,47 @@ if run_pipeline or True:
                 
             st.write("---")
             
-            # 5> Side-by-Side layout for Dataframe and the actual team Forecast Chart
-            left_col, right_col = st.columns(2)
-            with left_col:
-                st.subheader("📋 Core Cleaned & Merged Data Preview")
-                st.dataframe(df_raw, use_container_width=True)
+            # 5️⃣ Grid Layout for the actual team Charts (Matching your main.py order)
+            st.subheader("📊 Team System Visualizations & AI Forecasts")
+            
+            # First row of charts: Growth and Solar vs Wind
+            c1, c2 = st.columns(2)
+            with c1:
+                st.write("### Yearly Renewable Growth (Installed)")
+                fig1 = plt.figure(figsize=(8, 4.5))
+                # Pass the cleaned data before the merge slice to prevent dimension error
+                plot_yearly_growth(d1_cleaned)
+                st.pyplot(plt.gcf())
+                plt.close(fig1)
                 
-            with right_col:
-                st.subheader("📈 Team Generated AI System Forecast")
+            with c2:
+                st.write("### Solar vs Wind Capacity Comparison")
+                fig2 = plt.figure(figsize=(8, 4.5))
+                plot_solar_vs_wind(df_merged)
+                st.pyplot(plt.gcf())
+                plt.close(fig2)
                 
-                # 6️⃣ Capture and display the exact matplotlib plot from visualization.py
-                # Since plot_forecast doesn't return text, we capture the active plt figure
-                fig, ax = plt.subplots()
-                plot_forecast(df_raw) # Calls your team's actual plotting logic
-                st.pyplot(plt.gcf()) # Dynamically grabs the generated team chart cleanly
+            # Second row of charts: Regional and Vision 2030 AI Forecast
+            c3, c4 = st.columns(2)
+            with c3:
+                st.write("### Regional Project Distribution")
+                fig3 = plt.figure(figsize=(8, 4.5))
+                plot_regional_distribution(df_merged)
+                st.pyplot(plt.gcf())
+                plt.close(fig3)
+                
+            with c4:
+                st.write("### Future Renewable Energy Capacity Forecast (Vision 2030)")
+                fig4 = plt.figure(figsize=(8, 4.5))
+                # Generate forecast using team's prediction logic and unpack values
+                future_2030, vision_target, trend_fit, yearly, slope = plot_forecast(df_merged, forecast_until=2030)
+                st.pyplot(plt.gcf())
+                plt.close(fig4)
+                
+            # 6️⃣ Display Dataframe at the bottom
+            st.write("---")
+            st.subheader("📋 Cleaned Dataset Main Preview")
+            st.dataframe(df_merged, use_container_width=True)
                     
         except Exception as e:
             st.error(f"Pipeline Execution Error: {str(e)}")
-            st.info("Make sure all raw dataset files are correctly placed in the 'data/' folder in GitHub.")
