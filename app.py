@@ -32,12 +32,20 @@ if run_pipeline or True:
             d2_cleaned = clean_data2(data2_raw)
             df_merged = merge(d1_cleaned, d2_cleaned)
             
+            # 🛠️ EXACT COLUMNS MATCHING FIX
+            # Force creating 'Capacity' column to satisfy custom plotting functions
+            if 'Capacity (MW)' in df_merged.columns:
+                df_merged['Capacity'] = df_merged['Capacity (MW)']
+            
+            if 'Capacity (MW)' in d1_cleaned.columns:
+                d1_cleaned['Capacity'] = d1_cleaned['Capacity (MW)']
+
             st.success("🎯 Backend Pipeline executed successfully from main.py files!")
             
-            # 3> Calculate real KPI metrics dynamically using proper database columns
+            # 3️⃣ Calculate real KPI metrics dynamically using proper database columns
             total_projects = len(df_merged)
-            total_current_capacity = df_merged['Capacity (MW)'].sum()
-            avg_capacity = df_merged['Capacity (MW)'].mean()
+            total_current_capacity = df_merged['Capacity'].sum()
+            avg_capacity = df_merged['Capacity'].mean()
             
             # 4️⃣ Display real system KPI metrics calculated from your actual data
             col1, col2, col3 = st.columns(3)
@@ -58,7 +66,7 @@ if run_pipeline or True:
             with c1:
                 st.write("### Yearly Renewable Growth (Installed)")
                 fig1 = plt.figure(figsize=(8, 4.5))
-                # Pass the cleaned data before the merge slice to prevent dimension error
+                # Pass d1_cleaned with the enforced 'Capacity' column
                 plot_yearly_growth(d1_cleaned)
                 st.pyplot(plt.gcf())
                 plt.close(fig1)
