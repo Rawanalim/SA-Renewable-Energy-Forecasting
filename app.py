@@ -112,7 +112,11 @@ if run_pipeline or True:
             with ec1:
                 st.success(f"**Model Trend Fit (R² Score):** {metrics['trend_fit']:.4f}")
             with ec2:
-                st.attention_needed(f"**Projected Vision Gap:** {int(metrics['gap']):,} MW") if metrics['gap'] > 0 else st.success("**Target Met or Exceeded!**")
+                # Fixed the function call from attention_needed to warning cleanly
+                if metrics['gap'] > 0:
+                    st.warning(f"**Projected Vision Gap:** {int(metrics['gap']):,} MW remaining")
+                else:
+                    st.success("**Target Met or Exceeded!**")
             with ec3:
                 st.metric(label="Target Achievement Rate", value=f"{metrics['achievement_rate']:.2f}%")
                 
