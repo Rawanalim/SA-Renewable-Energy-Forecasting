@@ -50,7 +50,7 @@ jobs:
       run: |
         echo "CI/CD Pipeline executed successfully! The main.py script runs flawlessly and the model is fully operational."
 
-    # NEW CRITICAL STEP: Verify the Streamlit dashboard compiles cleanly without breaks
+    # Verify the Streamlit dashboard compiles cleanly without breaks
     - name: Verify Dashboard Application Compilation
       run: |
         python -m py_compile app.py
