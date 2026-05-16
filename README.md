@@ -82,7 +82,7 @@ Data Collection
 
 Install required packages:
 
-pip install pandas numpy matplotlib scikit-learn
+pip install -r requirements.txt
 
 Place the following datasets inside the `data/` folder:
 
@@ -91,8 +91,6 @@ Place the following datasets inside the `data/` folder:
 
 ## Tech Stack
 
-- Pandas
-- NumPy
-- Scikit-learn
-- Linear Regression
-- Matplotlib
+- **Backend:** Python, pandas, NumPy, Scikit-learn (Linear Regression)
+- **Frontend & Deployment:** Streamlit, Matplotlib
+- **Automation:** GitHub Actions (YAML CI/CD Workflows)
