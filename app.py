@@ -4,17 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-# 1️⃣ Import real functions from your project files
+# 1️⃣ Import the exact functions from your team's files
 from data_loader import load_data
-from preprocessing import clean_data1, clean_data2
-
-# Resolve merge function import location dynamically
-try:
-    from preprocessing import merge
-except ImportError:
-    from model import merge
-
-from visualization import plot_forecast
+from preprocessing import clean_data1, clean_data2, merge
+from visualization import plot_yearly_growth, plot_solar_vs_wind, plot_regional_distribution, plot_forecast
 from evaluation import evaluate_forecast
 
 # Application page configuration
@@ -33,46 +26,104 @@ run_pipeline = st.sidebar.button("🚀 Run Live AI Pipeline")
 if run_pipeline or True:
     with st.spinner("Executing core main.py pipeline models..."):
         try:
-            # 2️⃣ Execute core main.py pipeline steps sequentially
+            # 2️⃣ Load and clean the raw data using team's functions
             data1_raw, data2_raw = load_data()
             d1_cleaned = clean_data1(data1_raw)
             d2_cleaned = clean_data2(data2_raw)
-            df_raw = merge(d1_cleaned, d2_cleaned)
+            df_merged = merge(d1_cleaned, d2_cleaned)
             
+            # 🛠️ CRITICAL COLUMNS MATCHING FIX
+            # Enforce 'Capacity' column synchronization to satisfy custom team plotting functions
+            if 'Capacity (MW)' in df_merged.columns:
+                df_merged['Capacity'] = df_merged['Capacity (MW)']
+            if 'Capacity (MW)' in d1_cleaned.columns:
+                d1_cleaned['Capacity'] = d1_cleaned['Capacity (MW)']
+
             st.success("🎯 Backend Pipeline executed successfully from main.py files!")
             
-            # 3️⃣ Extract live forecast values from your plot_forecast function for Year 2030
-            future_2030, vision_target, trend_fit, yearly, slope = plot_forecast(df_raw, forecast_until=2030)
+            # 3️⃣ Calculate metrics dynamically from the actual data
+            total_projects = len(df_merged)
+            total_current_capacity = df_merged['Capacity'].sum()
+            avg_capacity = df_merged['Capacity'].mean()
             
-            # 4️⃣ Display real system KPI metrics calculated by your ML model
+            # 4️⃣ Display real system KPI metrics calculated from your actual data
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric(label="Calculated Slope (Growth Rate)", value=f"{slope:.2f} MW/Year")
+                st.metric(label="Total Tracked Projects", value=f"{total_projects} Projects")
             with col2:
-                st.metric(label="Predicted Capacity by 2030", value=f"{int(future_2030):,} MW")
+                st.metric(label="Total System Capacity", value=f"{int(total_current_capacity):,} MW")
             with col3:
-                st.metric(label="Saudi Vision 2030 Target", value=f"{int(vision_target):,} MW")
+                st.metric(label="Average Project Capacity", value=f"{avg_capacity:.2f} MW")
                 
             st.write("---")
             
-            # 5️⃣ Display merged dataset preview and generated charts side-by-side
-            left_col, right_col = st.columns(2)
-            with left_col:
-                st.subheader("📋 Core Cleaned & Merged Data")
-                st.dataframe(df_raw.head(20), use_container_width=True)
+            # 5️⃣ Grid Layout for Visualizations & User-Centric Explanations
+            st.subheader("📊 Team System Visualizations & AI Forecasts")
+            
+            # First row of charts
+            c1, c2 = st.columns(2)
+            with c1:
+                st.write("### Yearly Renewable Growth (Installed)")
+                fig1 = plt.figure(figsize=(8, 4.5))
+                plot_yearly_growth(d1_cleaned)
+                st.pyplot(plt.gcf())
+                plt.close(fig1)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** This chart illustrates the historical trend of established renewable installations. The green bars track annual capacity additions, while the dark line tracks cumulative infrastructure growth across Saudi Arabia.")
                 
-            with right_col:
-                st.subheader("📈 Generated AI System Forecast")
-                # Render the generated chart image if saved by the pipeline script
-                if os.path.exists("forecast_chart.png"): 
-                    st.image("forecast_chart.png", caption="Vision 2030 Live System Forecast")
+            with c2:
+                st.write("### Solar vs Wind Capacity Comparison")
+                fig2 = plt.figure(figsize=(8, 4.5))
+                plot_solar_vs_wind(df_merged)
+                st.pyplot(plt.gcf())
+                plt.close(fig2)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** This breakdown compares the total capacity distribution between Solar and Wind projects. It helps energy professionals assess the diversification and balance of the Kingdom's current renewable energy mix.")
+                
+            # Second row of charts
+            c3, c4 = st.columns(2)
+            with c3:
+                st.write("### Regional Project Distribution")
+                fig3 = plt.figure(figsize=(8, 4.5))
+                plot_regional_distribution(df_merged)
+                st.pyplot(plt.gcf())
+                plt.close(fig3)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** This geographic summary identifies which Saudi provinces host the largest renewable setups, pinpointing major investment hubs like Tabuk (NEOM) and Makkah regions.")
+                
+            with c4:
+                st.write("### Future Renewable Energy Capacity Forecast (Vision 2030)")
+                fig4 = plt.figure(figsize=(8, 4.5))
+                # Unpack predictive results directly from your team's function
+                future_2030, vision_target, trend_fit, yearly, slope = plot_forecast(df_merged, forecast_until=2030)
+                st.pyplot(plt.gcf())
+                plt.close(fig4)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** Our Predictive Linear Regression model utilizes historical deployment velocity to project capacity up to the year 2030, drawing a direct mathematical comparison against official national targets.")
+
+            # 6️⃣ User-Centric AI Model Evaluation Report Section
+            st.write("---")
+            st.subheader("🎯 Automated Vision 2030 Alignment Report")
+            
+            # Dynamically pull metrics calculated by evaluation.py
+            metrics = evaluate_forecast(future_2030, vision_target, trend_fit, yearly, slope)
+            
+            ec1, ec2, ec3 = st.columns(3)
+            with ec1:
+                st.success(f"**Model Trend Fit (R² Score):** {metrics['trend_fit']:.4f}")
+            with ec2:
+                # Fixed the function call from attention_needed to warning cleanly
+                if metrics['gap'] > 0:
+                    st.warning(f"**Projected Vision Gap:** {int(metrics['gap']):,} MW remaining")
                 else:
-                    # Fallback live plotting block if image file is not found
-                    fig, ax = plt.subplots()
-                    ax.plot(df_raw['Year'], df_raw['Cumulative Capacity'], marker='o', color='green')
-                    ax.set_title("Historical Cleaned Data Growth")
-                    st.pyplot(fig)
+                    st.success("**Target Met or Exceeded!**")
+            with ec3:
+                st.metric(label="Target Achievement Rate", value=f"{metrics['achievement_rate']:.2f}%")
+                
+            # 7️⃣ Display Dataframe at the bottom
+            st.write("---")
+            st.subheader("📋 Cleaned Dataset Main Preview")
+            st.dataframe(df_merged, use_container_width=True)
                     
         except Exception as e:
             st.error(f"Pipeline Execution Error: {str(e)}")
-            st.info("Make sure all raw dataset files are correctly placed in the 'data/' folder in GitHub.")
