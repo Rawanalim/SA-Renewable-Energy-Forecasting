@@ -32,17 +32,16 @@ if run_pipeline or True:
             d2_cleaned = clean_data2(data2_raw)
             df_merged = merge(d1_cleaned, d2_cleaned)
             
-            # 🛠️ EXACT COLUMNS MATCHING FIX
-            # Force creating 'Capacity' column to satisfy custom plotting functions
+            # 🛠️ CRITICAL COLUMNS MATCHING FIX
+            # Enforce 'Capacity' column synchronization to satisfy custom team plotting functions
             if 'Capacity (MW)' in df_merged.columns:
                 df_merged['Capacity'] = df_merged['Capacity (MW)']
-            
             if 'Capacity (MW)' in d1_cleaned.columns:
                 d1_cleaned['Capacity'] = d1_cleaned['Capacity (MW)']
 
             st.success("🎯 Backend Pipeline executed successfully from main.py files!")
             
-            # 3️⃣ Calculate real KPI metrics dynamically using proper database columns
+            # 3️⃣ Calculate metrics dynamically from the actual data
             total_projects = len(df_merged)
             total_current_capacity = df_merged['Capacity'].sum()
             avg_capacity = df_merged['Capacity'].mean()
@@ -58,18 +57,19 @@ if run_pipeline or True:
                 
             st.write("---")
             
-            # 5️⃣ Grid Layout for the actual team Charts (Matching your main.py order)
+            # 5️⃣ Grid Layout for Visualizations & User-Centric Explanations
             st.subheader("📊 Team System Visualizations & AI Forecasts")
             
-            # First row of charts: Growth and Solar vs Wind
+            # First row of charts
             c1, c2 = st.columns(2)
             with c1:
                 st.write("### Yearly Renewable Growth (Installed)")
                 fig1 = plt.figure(figsize=(8, 4.5))
-                # Pass d1_cleaned with the enforced 'Capacity' column
                 plot_yearly_growth(d1_cleaned)
                 st.pyplot(plt.gcf())
                 plt.close(fig1)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** This chart illustrates the historical trend of established renewable installations. The green bars track annual capacity additions, while the dark line tracks cumulative infrastructure growth across Saudi Arabia.")
                 
             with c2:
                 st.write("### Solar vs Wind Capacity Comparison")
@@ -77,8 +77,10 @@ if run_pipeline or True:
                 plot_solar_vs_wind(df_merged)
                 st.pyplot(plt.gcf())
                 plt.close(fig2)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** This breakdown compares the total capacity distribution between Solar and Wind projects. It helps energy professionals assess the diversification and balance of the Kingdom's current renewable energy mix.")
                 
-            # Second row of charts: Regional and Vision 2030 AI Forecast
+            # Second row of charts
             c3, c4 = st.columns(2)
             with c3:
                 st.write("### Regional Project Distribution")
@@ -86,16 +88,35 @@ if run_pipeline or True:
                 plot_regional_distribution(df_merged)
                 st.pyplot(plt.gcf())
                 plt.close(fig3)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** This geographic summary identifies which Saudi provinces host the largest renewable setups, pinpointing major investment hubs like Tabuk (NEOM) and Makkah regions.")
                 
             with c4:
                 st.write("### Future Renewable Energy Capacity Forecast (Vision 2030)")
                 fig4 = plt.figure(figsize=(8, 4.5))
-                # Generate forecast using team's prediction logic and unpack values
+                # Unpack predictive results directly from your team's function
                 future_2030, vision_target, trend_fit, yearly, slope = plot_forecast(df_merged, forecast_until=2030)
                 st.pyplot(plt.gcf())
                 plt.close(fig4)
+                # 💡 User-Centric Explanation
+                st.info("**AI Insight:** Our Predictive Linear Regression model utilizes historical deployment velocity to project capacity up to the year 2030, drawing a direct mathematical comparison against official national targets.")
+
+            # 6️⃣ User-Centric AI Model Evaluation Report Section
+            st.write("---")
+            st.subheader("🎯 Automated Vision 2030 Alignment Report")
+            
+            # Dynamically pull metrics calculated by evaluation.py
+            metrics = evaluate_forecast(future_2030, vision_target, trend_fit, yearly, slope)
+            
+            ec1, ec2, ec3 = st.columns(3)
+            with ec1:
+                st.success(f"**Model Trend Fit (R² Score):** {metrics['trend_fit']:.4f}")
+            with ec2:
+                st.attention_needed(f"**Projected Vision Gap:** {int(metrics['gap']):,} MW") if metrics['gap'] > 0 else st.success("**Target Met or Exceeded!**")
+            with ec3:
+                st.metric(label="Target Achievement Rate", value=f"{metrics['achievement_rate']:.2f}%")
                 
-            # 6️⃣ Display Dataframe at the bottom
+            # 7️⃣ Display Dataframe at the bottom
             st.write("---")
             st.subheader("📋 Cleaned Dataset Main Preview")
             st.dataframe(df_merged, use_container_width=True)
