@@ -28,9 +28,9 @@ jobs:
         pip install pandas numpy scikit-learn matplotlib openpyxl
 
     # 4. Automatically verify that all team script files are present and syntactically correct
-    - name: Verify Python Scripts Quality
+    - name: Run Main Pipeline
       run: |
-        python -m compileall .
+        python main.py
 
     # 5. Log the validation success and system deployment readiness
     - name: Deployment Readiness Report
