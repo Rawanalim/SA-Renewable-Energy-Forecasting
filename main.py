@@ -1,3 +1,4 @@
+from data_loader import load_data
 def main():
 
     # Load datasets
